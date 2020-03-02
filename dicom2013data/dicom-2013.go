@@ -1,6 +1,9 @@
-// Date Assembled: Mon Mar  2 11:01:05 EST 2020
+// Schema data for DICOM version 2013
+// Date Assembled: Mon Mar  2 13:58:50 EST 2020
 package dicom2013data
 
+// Unmarshal this string into a github.com/macadamian/dicom SchemaDef using encoding/json package.
+// You can assign an empty string here afterwards to free memory.
 var SchemaStr =`
 {
 	"ClassDefs": [

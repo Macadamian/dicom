@@ -23,5 +23,5 @@ community feedback might help and improve it so that it is useful.
 Sub-packages:
 * crawl - DICOM specification crawler that generates the dicomYYYYRdata packages
 * codegen - Experimental code generator that generates the dicom2019b package
-* dicomYYYYRdata - Packages with linkable, unmarshallable JSON representations of spec information
+* dicomYYYYRdata - Packages with linkable, unmarshalable JSON representations of spec information
 * dicom2019b - Experimental Go type representation of the SOP Classes from the DICOM spec
