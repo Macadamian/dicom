@@ -5,7 +5,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"github.com/gradienthealth/dicom/dicomtag"
-	"github.com/macadamian/dicom"
 	"net/http"
 	"os"
 	"strconv"
@@ -13,6 +12,41 @@ import (
 	"time"
 	"unicode"
 )
+
+////  Schema Data
+
+type SchemaDef struct {
+	ClassDefs  []*ClassDef
+	TagDefs    map[string]*TagDef
+	ModuleDefs map[string]*ModuleDef
+}
+
+type ClassDef struct {
+	SOPClassUid string
+	Name        string
+	Modules     []ModuleUsage
+}
+
+type ModuleUsage struct {
+	Name  string
+	Usage string
+}
+
+type ModuleDef struct {
+	Tags []TagUsage
+}
+
+type TagUsage struct {
+	Path []string
+	Type string
+}
+
+type TagDef struct {
+	Keyword    string
+	VR         []string
+	VM         string
+	Deidentify string
+}
 
 //// XML Parsing
 
@@ -121,9 +155,9 @@ func extractDicom(version string) {
 	stdSopClsSctn := part4.Dict["sect_B.5"]
 	stdSopClsTbl := findNodeByType(stdSopClsSctn, "http://docbook.org/ns/docbook", "table")
 
-	sopClasses := []*dicom.ClassDef{}
+	sopClasses := []*ClassDef{}
 
-	modules := map[string]*dicom.ModuleDef{}
+	modules := map[string]*ModuleDef{}
 
 	walkNode([]Node{*stdSopClsTbl}, func(n Node) bool {
 		if n.XMLName.Space == "http://docbook.org/ns/docbook" && n.XMLName.Local == "tr" {
@@ -139,7 +173,7 @@ func extractDicom(version string) {
 			sopClassName := cn.Nodes[0].Content
 			sopClassUid := sanitize(spu.Nodes[0].Content)
 
-			sopClass := dicom.ClassDef{Name: sopClassName, SOPClassUid: sopClassUid, Modules: []dicom.ModuleUsage{}}
+			sopClass := ClassDef{Name: sopClassName, SOPClassUid: sopClassUid, Modules: []ModuleUsage{}}
 			sopClasses = append(sopClasses, &sopClass)
 
 			doc := sp.Attrs[0].Value
@@ -183,7 +217,7 @@ func extractDicom(version string) {
 
 					u := strings.Split(usg.Nodes[0].Content, " - ")[0]
 
-					m := dicom.ModuleUsage{Name: mdl.Nodes[0].Content, Usage: u}
+					m := ModuleUsage{Name: mdl.Nodes[0].Content, Usage: u}
 					sopClass.Modules = append(sopClass.Modules, m)
 
 					r := findNodeByType(&ref, "http://docbook.org/ns/docbook", "xref")
@@ -198,7 +232,7 @@ func extractDicom(version string) {
 					mdlattrtbl := findNodeByType(mdlsect, "http://docbook.org/ns/docbook", "table")
 
 					if mdlattrtbl != nil && strings.HasSuffix(mdlattrtbl.Nodes[0].Content, "Module Attributes") {
-						mdldef := dicom.ModuleDef{}
+						mdldef := ModuleDef{}
 
 						var attrHandler func(Node, int) bool
 						parents := []string{}
@@ -248,7 +282,7 @@ func extractDicom(version string) {
 										parents = parents[:level+1]
 									}
 
-									tdef := dicom.TagUsage{}
+									tdef := TagUsage{}
 									tdef.Type = tp.Nodes[0].Content
 									tdef.Path = append([]string{}, parents...)
 									mdldef.Tags = append(mdldef.Tags, tdef)
@@ -269,7 +303,7 @@ func extractDicom(version string) {
 		return true
 	})
 
-	tagdefs := map[string]*dicom.TagDef{}
+	tagdefs := map[string]*TagDef{}
 
 	part6 := linkLookup["PS3.6"]
 	dataElementsSctn := part6.Dict["table_6-1"]
@@ -310,7 +344,7 @@ func extractDicom(version string) {
 			walkNode([]Node{vm}, getVal)
 			vmstr := v
 
-			tagdef := dicom.TagDef{}
+			tagdef := TagDef{}
 
 			for _, t := range parseTagPattern(tagstr) {
 				tagdef.Keyword = keywordstr
@@ -379,22 +413,24 @@ func extractDicom(version string) {
 	}
 	defer out.Close()
 
-	out.Write([]byte(fmt.Sprintf("// Date Assembled: %s\n", time.Now().Format(time.UnixDate))))
-	out.Write([]byte(fmt.Sprintf("package dicom%sdata\n", version)))
-	out.Write([]byte(`
-var SchemaStr =`))
+	fmt.Fprintf(out, "// Schema data for DICOM version %s\n", version)
+	fmt.Fprintf(out, "// Date Assembled: %s\n", time.Now().Format(time.UnixDate))
+	fmt.Fprintf(out, "package dicom%sdata\n", version)
+	fmt.Fprintf(out, `
+// Unmarshal this string into a github.com/macadamian/dicom SchemaDef using encoding/json package.
+// You can assign an empty string here afterwards to free memory.
+var SchemaStr =`)
 
-	out.Write([]byte("`\n"))
+	fmt.Fprintf(out, "`\n")
 
-	od := dicom.SchemaDef{ClassDefs: sopClasses, TagDefs: tagdefs, ModuleDefs: modules}
+	od := SchemaDef{ClassDefs: sopClasses, TagDefs: tagdefs, ModuleDefs: modules}
 	b, err := json.MarshalIndent(od, "", "\t")
 	if err != nil {
 		panic(err)
 	}
-
 	out.Write(b)
 
-	out.Write([]byte("`\n"))
+	fmt.Fprintf(out, "`\n")
 
 	fmt.Printf("DONE dicom-%s.go\n", version)
 }
