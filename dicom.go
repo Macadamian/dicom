@@ -40,6 +40,32 @@ func main() {
 	fmt.Printf("%s\n", string(out))
 }
 
+// Unmarshal a DICOM dataset into a provided Go value. Note that in most cases
+// you will want this value to be a pointer to a storage class from one of the
+// sub-packages, such as dicom2019b. For example, if the dataset is an MRI image
+// instance then you can use dicom2019b MRImageStorage.
+//
+// This unmarshaler is expecting that the SOPClassUID matches the one declared on the
+// tag of a special SOPClassUID struct property to avoid mismatches on the types. The
+// shape of the struct should look as follows:
+//   type MyStorage struct {
+//     SOPClassUID bool `1.2.3.3.44....`
+//     ModuleA ModuleA
+//     ModuleB *ModuleB
+//   }
+//
+//   type ModuleA struct {
+//     aKeyword string `tag:"(3006,0082)" vr:"IS" vm:"1" deidentify:"" types:"[{ModuleA,(3006,0082)}]"`
+//     aSequence Sequence `tag:"(1234,1234)" vr:"SQ" vm:"1" deidentify:"" types:"[{ModuleA,(1234,1234)}]"`
+//   }
+//
+//   type Sequence struct {
+//     ...
+//   }
+//
+// Note that any extra DICOM tags that don't fit within the schema structure of the storage and
+// related types are ignored and remain in the original dataset along with all of the other tags
+// that did match.
 func Unmarshal(ds *dicom.DataSet, v interface{}) error {
 	pt := reflect.TypeOf(v)
 	if pt.Kind() != reflect.Ptr {

@@ -11,7 +11,7 @@ type SchemaDef struct {
 }
 
 // An SOP Class definition describes the name, SOPClassUID and modules that form a valid DICOM
-//  instance of this class.
+// instance of this class.
 type ClassDef struct {
 	SOPClassUid string
 	Name        string
@@ -19,10 +19,10 @@ type ClassDef struct {
 }
 
 // A module usage describes a module that is used as part of an SOP Class and the
-//  usage, whether required, option or conditionally optional.
+// usage, whether required, option or conditionally optional.
 type ModuleUsage struct {
 	// Name provides a name to this module usage and also a key into the SchemaDef.ModuleDefs to look
-	//  up additional information. 
+	// up additional information. 
 	Name  string
 	// Usage is either "M" (mandatory), "U" (user optional), or "C" (conditionally optional)
 	Usage string
@@ -34,7 +34,7 @@ type ModuleDef struct {
 }
 
 // A tag usage is a usage of one or more tags in a path within the DICOM instance with a
-//  type that determines whether the tag is required, optional, may be present or not.
+// type that determines whether the tag is required, optional, may be present or not.
 type TagUsage struct {
 	// A path within a DICOM instance of tags for this usage (e.g. ["(0040,0555)","(0040,a040)"]) 
 	Path []string
@@ -47,8 +47,8 @@ type TagUsage struct {
 	Type string
 }
 
-// A tag defintion provide information about a DICOM tag within this version of the specifiction
-//  with the plain text keyword, the value representation, multiplicity and deidentification metadata.
+// A tag defintion provide information about a DICOM tag within this version of the specification
+// with the plain text keyword, the value representation, multiplicity and deidentification metadata.
 type TagDef struct {
 	// The keyword is a plain text keyword for this tag that is guaranteed to be unique
 	Keyword    string
@@ -61,6 +61,6 @@ type TagDef struct {
 	VM         string
 	// Deidentify provides metadata regarding the handling of this tag when deidentifying DICOM information.
 	// If empty, the spec does not expect that this tag is likely to contain personal health information. Otherwise,
-	// values are described in Section E.1.1 of PS 3.15 of the DICOM spec for details explanations.
+	// values are described in Section E.1.1 of PS 3.15 of the DICOM spec for detailed explanations.
 	Deidentify string
 }
