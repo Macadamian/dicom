@@ -61,8 +61,8 @@ type ModuleDef struct {
 }
 
 type TagUsage struct {
-	Path []string
-	Type string
+	Path  []string
+	Type  string
 	Audit []TagAudit
 }
 
@@ -146,17 +146,17 @@ function SOPClassUID(sopClassUIDString: string) {
 				continue
 			}
 
-            optional := ""
+			optional := ""
 
 			var initialValue = ""
 			if mdu.Usage == "U" {
-                optional = "|null";
-                initialValue = " = null"
+				optional = "|null"
+				initialValue = " = null"
 			} else {
 				initialValue = fmt.Sprintf(" = new %s()", name)
 			}
 
-            fmt.Fprintf(out, "\t@Reflect.metadata(\"constructor\", () => %s)\n", typ)
+			fmt.Fprintf(out, "\t@Reflect.metadata(\"constructor\", () => %s)\n", typ)
 			fmt.Fprintf(out, "\t%s: %s%s%s;\n", name, typ, optional, initialValue)
 		}
 
@@ -349,12 +349,12 @@ function SOPClassUID(sopClassUIDString: string) {
 				typ = "string"
 			}
 
-            baseType := typ
-            if baseType == "string" {
-              baseType = "String";
-            } else if baseType == "number" {
-              baseType = "Number";
-            }
+			baseType := typ
+			if baseType == "string" {
+				baseType = "String"
+			} else if baseType == "number" {
+				baseType = "Number"
+			}
 
 			// Any range or sequence just translated into an array
 			if strings.Contains(td.VM, "-") || td.VR[0] == "SQ" {
@@ -364,14 +364,14 @@ function SOPClassUID(sopClassUIDString: string) {
 			}
 
 			initialValue := ""
-            optional := ""
+			optional := ""
 
 			// Optional types that aren't already arrays are made into optional
 			//  so that they can be null. Slices are exempt since their zero value is
 			//  already a kind of pointer that can be nil.
 			if tgu.Type != "1" && tgu.Type != "2" && !strings.Contains(typ, "Array<") {
-                optional = "|null"
-                initialValue = " = null"
+				optional = "|null"
+				initialValue = " = null"
 			} else {
 				// Figure out what initial values would be for non-optionals
 				if typ == "string" {
@@ -405,7 +405,7 @@ function SOPClassUID(sopClassUIDString: string) {
 			fmt.Fprintf(out, "\t@vm(\"%s\")\n", td.VM)
 			fmt.Fprintf(out, "\t@deidentify(\"%s\")\n", td.Deidentify)
 			fmt.Fprintf(out, "\t@types(\"%s\")\n", audits)
-            fmt.Fprintf(out, "\t@Reflect.metadata(\"constructor\", () => %s )\n", baseType)
+			fmt.Fprintf(out, "\t@Reflect.metadata(\"constructor\", () => %s )\n", baseType)
 			fmt.Fprintf(out, "\t%s: %s%s%s;\n\n", name, typ, optional, initialValue)
 		}
 		fmt.Fprintf(out, "}\n\n")
